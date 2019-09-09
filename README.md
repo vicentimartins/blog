@@ -1,6 +1,3 @@
-Sculpin Blog Skeleton
-=====================
-
 A skeleton for a Sculpin based blog.
 
 Powered by [Sculpin](http://sculpin.io). =)
@@ -81,3 +78,6 @@ a Sculpin installation.
 For more information about getting started with Sculpin, check out the
 [Get Started page](https://sculpin.io/getstarted/) and have a look at the full
 [documentation](https://sculpin.io/documentation/).
+=======
+# blog
+Vicente Martins's blog.
