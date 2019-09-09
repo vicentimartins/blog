@@ -7,3 +7,4 @@
 /source/build/
 s3.conf
 /vendor/
+node_modules
