@@ -1,16 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <feed xmlns="http://www.w3.org/2005/Atom">
     <title><![CDATA[Vicente Martins&#039; blog]]></title>
-    <link href="/atom.xml" rel="self"/>
-    <link href="/"/>
-    <updated>2019-09-09T04:05:21-03:00</updated>
-    <id>/</id>
+    <link href="https://vicentimartins.github.io/blog/atom.xml" rel="self"/>
+    <link href="https://vicentimartins.github.io/blog/"/>
+    <updated>2019-09-09T04:16:41-03:00</updated>
+    <id>https://vicentimartins.github.io/blog/</id>
         <generator uri="http://sculpin.io/">Sculpin</generator>
             <entry>
             <title type="html"><![CDATA[Configuração do gitlab-ci]]></title>
-            <link href="/blog/2019/09/09/config-gitlab-ci/"/>
+            <link href="https://vicentimartins.github.io/blog/blog/2019/09/09/config-gitlab-ci/"/>
             <updated>2019-09-09T00:00:00-03:00</updated>
-            <id>/blog/2019/09/09/config-gitlab-ci/</id>
+            <id>https://vicentimartins.github.io/blog/blog/2019/09/09/config-gitlab-ci/</id>
             <content type="html"><![CDATA[<p>Algumas coisas me perturbam bastante, dentre elas o fato de não ter certeza de
 que vou ou não qubrar qualquer parte do projeto em que estou trabalhando. Para
 evitar esse tipo de problema, nada como uma ferramenta que realiza <strong>Integração Contínua</strong>

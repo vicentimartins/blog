@@ -2,4 +2,4 @@ User-agent: *
 Disallow: /blog/tags/
 Disallow: /blog/categories/
 
-Sitemap: /sitemap.xml
+Sitemap: https://vicentimartins.github.io/blog/sitemap.xml
