@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+    <title><![CDATA[Vicente Martins&#039; blog]]></title>
+    <link href="/blog/tags/gitlab.xml" rel="self"/>
+    <link href="/"/>
+    <updated>2019-09-09T03:35:52-03:00</updated>
+    <id>/</id>
+        <generator uri="http://sculpin.io/">Sculpin</generator>
+            <entry>
+            <title type="html"><![CDATA[Configuração do gitlab-ci]]></title>
+            <link href="/blog/2019/09/09/config-gitlab-ci/"/>
+            <updated>2019-09-09T00:00:00-03:00</updated>
+            <id>/blog/2019/09/09/config-gitlab-ci/</id>
+            <content type="html"><![CDATA[<p>Algumas coisas me perturbam bastante, dentre elas o fato de não ter certeza de
+que vou ou não qubrar qualquer parte do projeto em que estou trabalhando. Para
+evitar esse tipo de problema, nada como uma ferramenta que realiza <strong>Integração Contínua</strong>
+e aumenta a certeza de não estar acabando com o dia de ninguém por quebrar aquele
+projeto que está rodando lindamente.</p>
+
+<p>Na minha busca por alguma ferramenta legal, encontrei o <a href="https://docs.gitlab.com/ee/ci/">gitlab-ci</a>
+que é uma ferramenta que me fez brilhar os olhos, dada sua facilidade de implementação
+e o custo zero para sua adoção.</p>
+
+<p>Várias equipes em que já atuei junto, utilizam o <strong>gitlab.com</strong> como VCS, que já traz
+o <strong>gitlab-ci</strong> como ferramenta de CI padrão, mas nunca tinha visto ninguém rodar
+com todo o poder que essa ferramenta traz.</p>
+
+<h3 id="requisitos-para-utiliza%C3%A7%C3%A3o-do-gitlab-ci">Requisitos para utilização do gitlab-ci</h3>
+
+<p>Para este texto, vou usar como referência um projeto em Python que utiliza Django
+e DRF, além da exigência do PGSQL como DB.</p>
+
+<p>O primeiro passo é criar sua imagem <strong>Docker</strong> (Se não trabalha com Docker, não sei como
+te ajudar), pra isso estou usando o <em>Dockerfile</em> que segue:</p>
+
+<pre><code class="Dockerfile">FROM python:alpine
+
+ENV PYTHONUNBUFFERED 1
+
+LABEL Name=test_backend Version=0.0.1
+EXPOSE 8000
+
+COPY ./requirements.txt /requirements.txt
+RUN pip install -r requirements.txt
+
+RUN mkdir /app
+WORKDIR /app
+COPY ./app /app
+
+RUN adduser -D user
+USER user
+</code></pre>
+
+<p>Com essa imagem em mãos e tendo a certeza de que o processo de <strong>build da mesma está em ordem</strong>,
+no menu lateral do projeto no gitlab, acesso o menu <em>Container Registry</em>.
+Este menu permite criar uma ou várias imagens Docker para o projeto. Através
+desta imagem será possível rodar todo o processo de pipeline.</p>
+
+<h3 id="configura%C3%A7%C3%A3o-do-.gitlab-ci.yml">Configuração do .gitlab-ci.yml</h3>
+
+<p><strong>Este arquivo funciona como um orquestrador</strong>. Nele se define todos os <strong>jobs</strong> que serão
+utilizados na pipeline, <strong>scripts</strong> que vão ser rodados, scripts para rodar antes e
+depois dos trabalhos definidos e etc. Mais informações sobre essas variáveis do
+<code>.gitlab-ci.yml</code> podem ser acessadas <a href="https://docs.gitlab.com/ee/ci/variables/">aqui</a>.</p>
+
+<p>Além dos jobs, scripts e variáveis de ambiente, é possível determinar
+<strong>dependências de outras imagens</strong>. Como neste caso é necessário rodar o Postgres
+junto com nosso projeto, automaticamente o <code>.gitlab-ci-yml</code> busca a última versão
+da imagem solicitada e a agrega a pipeline como <strong>service</strong>, a.k.a serviço de dependência
+externa.</p>
+
+<p>Observa nosso arquivo <code>.gitlab-ci.yml</code>:</p>
+
+<pre><code class="yml">image: registry.gitlab.com/vicentimartins/backend-test:latest
+
+services:
+  - postgres:9.6
+
+variables:
+  POSTGRES_DB: "my_custom_db"
+  POSTGRES_USER: "postgres"
+  POSTGRES_PASSWORD: "secret"
+  PGDATA: "/var/lib/postgresql/data"
+  POSTGRES_INITDB_ARGS: "--encoding=UTF8 --data-checksums"
+
+stages:
+  - build
+  - test
+
+build:
+  stage: build
+  script:
+    - pip install -r requirements.txt
+
+test:
+  stage: test
+  script:
+  - python manage.py test
+</code></pre>
+
+<p>Agora, se você é daquelas pessoas que <strong>não abre mão de implementar seus testes</strong> para
+toda tarefa solicitada, quando você realizar algum <em>Merge Request</em> ou <em>Pull Request</em>
+verá que o seu projeto está passando pela pipeline definida e rodando todos os testes
+para minimizar erros ocorridos por novas integrações de partes do projeto atual.</p>
+
+<p>Caso algum teste falhe, a pipeline retorna 0 (zero) e a integração não é permitida. Fica
+a cargo do dev resolver o problema encontrado e propor novo <em>MR/PR</em>. Isso garante que
+nenhum erro, facilmente detectável por teste, vai quebrar o projeto atual.</p>
+
+<h3 id="palavras-finais">Palavras finais</h3>
+
+<p>Além da aplicação mostrada neste texto, é possível adicionar outras ferramentas para
+os mais diversos fins, como por exemplo, ferramentas de qualidade de código (QA). Mas
+esta abordagem fica para um próximo texto.</p>
+
+<p>Bem, essa foi minha mais nova tentativa de ajudar a comunidade. Peço que dêem feed
+back nos comentários e que possam utilizar mais um pouco desta ferramenta maravilhosa.</p>
+
+<p>Forte abraço!</p>
+]]></content>
+        </entry>
+    </feed>

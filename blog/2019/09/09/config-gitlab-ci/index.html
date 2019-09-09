@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html>
+    <head lang="en">
+        <title>Configuração do gitlab-ci &mdash; Vicente Martins&#039; blog &mdash; Tech stuffs and more</title>
+        <meta charset="utf-8">
+        <meta name="theme-color" content="#ffffff">
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+            <meta name="robots" content="index, follow">
+        <link rel="stylesheet" href="/build/app.css">
+
+        <link rel="apple-touch-startup-image" href="/build/2048x2048.png">
+        <meta name="mobile-web-app-capable" content="yes">
+        <meta name="apple-mobile-web-app-capable" content="yes">
+        <link rel="shortcut icon" sizes="76x76" href="/build/jackson/76x76.png">
+        <link rel="shortcut icon" sizes="120x120" href="/build/jackson/120x120.png">
+        <link rel="shortcut icon" sizes="128x128" href="/build/jackson/128x128.png">
+        <link rel="shortcut icon" sizes="152x152" href="/build/jackson/152x152.png">
+        <link rel="shortcut icon" sizes="196x196" href="/build/jackson/196x196.png">
+        <link rel="shortcut icon" sizes="512x512" href="/build/jackson/512x512.png">
+        <link rel="shortcut icon" sizes="1024x1024" href="/build/jackson/1024x1024.png">
+        <link rel="shortcut icon" sizes="2048x2048" href="/build/jackson/2048x2048.png">
+        <link rel="apple-touch-icon" sizes="76x76" href="/build/jackson/76x76.png">
+        <link rel="apple-touch-icon" sizes="120x120" href="/build/jackson/120x120.png">
+        <link rel="apple-touch-icon" sizes="128x128" href="/build/jackson/128x128.png">
+        <link rel="apple-touch-icon" sizes="152x152" href="/build/jackson/152x152.png">
+        <link rel="apple-touch-icon" sizes="196x196" href="/build/jackson/196x196.png">
+        <link rel="apple-touch-icon" sizes="512x512" href="/build/jackson/512x512.png">
+        <link rel="apple-touch-icon" sizes="1024x1024" href="/build/jackson/1024x1024.png">
+        <link rel="apple-touch-icon" sizes="2048x2048" href="/build/jackson/2048x2048.png">
+
+        <link rel="alternate" type="application/atom+xml" href="/atom.xml" title="Vicente Martins&#039; blog activity feed" />
+                                    </head>
+    <body>
+        <header>
+            <nav class="navbar navbar-expand-md navbar-dark fixed-top bg-dark">
+                <div class="container">
+                    <a class="navbar-brand" href="/">Vicente Martins&#039; blog</a>
+                    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation">
+                        <span class="navbar-toggler-icon"></span>
+                    </button>
+                    <div class="collapse navbar-collapse" id="navbarCollapse">
+                        <ul class="navbar-nav mr-auto">
+                            <li class="nav-item"><a class="nav-link" href="/blog">Posts Archive</a></li>
+                            <li class="nav-item"><a class="nav-link" href="/blog/categories">Categories</a></li>
+                            <li class="nav-item"><a class="nav-link" href="/blog/tags">Tags</a></li>
+                            <li class="nav-item"><a class="nav-link" href="/about">About</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </nav>
+        </header>
+        <main role="main" class="container">
+            <div class="row">
+                <div class="col-sm-8">
+                        <article>
+        <header>
+            <h2>Configuração do gitlab-ci <small>post</small></h2>
+        </header>
+        <div>
+            <p>Algumas coisas me perturbam bastante, dentre elas o fato de não ter certeza de
+que vou ou não qubrar qualquer parte do projeto em que estou trabalhando. Para
+evitar esse tipo de problema, nada como uma ferramenta que realiza <strong>Integração Contínua</strong>
+e aumenta a certeza de não estar acabando com o dia de ninguém por quebrar aquele
+projeto que está rodando lindamente.</p>
+
+<p>Na minha busca por alguma ferramenta legal, encontrei o <a href="https://docs.gitlab.com/ee/ci/">gitlab-ci</a>
+que é uma ferramenta que me fez brilhar os olhos, dada sua facilidade de implementação
+e o custo zero para sua adoção.</p>
+
+<p>Várias equipes em que já atuei junto, utilizam o <strong>gitlab.com</strong> como VCS, que já traz
+o <strong>gitlab-ci</strong> como ferramenta de CI padrão, mas nunca tinha visto ninguém rodar
+com todo o poder que essa ferramenta traz.</p>
+
+<h3 id="requisitos-para-utiliza%C3%A7%C3%A3o-do-gitlab-ci">Requisitos para utilização do gitlab-ci</h3>
+
+<p>Para este texto, vou usar como referência um projeto em Python que utiliza Django
+e DRF, além da exigência do PGSQL como DB.</p>
+
+<p>O primeiro passo é criar sua imagem <strong>Docker</strong> (Se não trabalha com Docker, não sei como
+te ajudar), pra isso estou usando o <em>Dockerfile</em> que segue:</p>
+
+<pre><code class="Dockerfile">FROM python:alpine
+
+ENV PYTHONUNBUFFERED 1
+
+LABEL Name=test_backend Version=0.0.1
+EXPOSE 8000
+
+COPY ./requirements.txt /requirements.txt
+RUN pip install -r requirements.txt
+
+RUN mkdir /app
+WORKDIR /app
+COPY ./app /app
+
+RUN adduser -D user
+USER user
+</code></pre>
+
+<p>Com essa imagem em mãos e tendo a certeza de que o processo de <strong>build da mesma está em ordem</strong>,
+no menu lateral do projeto no gitlab, acesso o menu <em>Container Registry</em>.
+Este menu permite criar uma ou várias imagens Docker para o projeto. Através
+desta imagem será possível rodar todo o processo de pipeline.</p>
+
+<h3 id="configura%C3%A7%C3%A3o-do-.gitlab-ci.yml">Configuração do .gitlab-ci.yml</h3>
+
+<p><strong>Este arquivo funciona como um orquestrador</strong>. Nele se define todos os <strong>jobs</strong> que serão
+utilizados na pipeline, <strong>scripts</strong> que vão ser rodados, scripts para rodar antes e
+depois dos trabalhos definidos e etc. Mais informações sobre essas variáveis do
+<code>.gitlab-ci.yml</code> podem ser acessadas <a href="https://docs.gitlab.com/ee/ci/variables/">aqui</a>.</p>
+
+<p>Além dos jobs, scripts e variáveis de ambiente, é possível determinar
+<strong>dependências de outras imagens</strong>. Como neste caso é necessário rodar o Postgres
+junto com nosso projeto, automaticamente o <code>.gitlab-ci-yml</code> busca a última versão
+da imagem solicitada e a agrega a pipeline como <strong>service</strong>, a.k.a serviço de dependência
+externa.</p>
+
+<p>Observa nosso arquivo <code>.gitlab-ci.yml</code>:</p>
+
+<pre><code class="yml">image: registry.gitlab.com/vicentimartins/backend-test:latest
+
+services:
+  - postgres:9.6
+
+variables:
+  POSTGRES_DB: "my_custom_db"
+  POSTGRES_USER: "postgres"
+  POSTGRES_PASSWORD: "secret"
+  PGDATA: "/var/lib/postgresql/data"
+  POSTGRES_INITDB_ARGS: "--encoding=UTF8 --data-checksums"
+
+stages:
+  - build
+  - test
+
+build:
+  stage: build
+  script:
+    - pip install -r requirements.txt
+
+test:
+  stage: test
+  script:
+  - python manage.py test
+</code></pre>
+
+<p>Agora, se você é daquelas pessoas que <strong>não abre mão de implementar seus testes</strong> para
+toda tarefa solicitada, quando você realizar algum <em>Merge Request</em> ou <em>Pull Request</em>
+verá que o seu projeto está passando pela pipeline definida e rodando todos os testes
+para minimizar erros ocorridos por novas integrações de partes do projeto atual.</p>
+
+<p>Caso algum teste falhe, a pipeline retorna 0 (zero) e a integração não é permitida. Fica
+a cargo do dev resolver o problema encontrado e propor novo <em>MR/PR</em>. Isso garante que
+nenhum erro, facilmente detectável por teste, vai quebrar o projeto atual.</p>
+
+<h3 id="palavras-finais">Palavras finais</h3>
+
+<p>Além da aplicação mostrada neste texto, é possível adicionar outras ferramentas para
+os mais diversos fins, como por exemplo, ferramentas de qualidade de código (QA). Mas
+esta abordagem fica para um próximo texto.</p>
+
+<p>Bem, essa foi minha mais nova tentativa de ajudar a comunidade. Peço que dêem feed
+back nos comentários e que possam utilizar mais um pouco desta ferramenta maravilhosa.</p>
+
+<p>Forte abraço!</p>
+
+        </div>
+                    <p class="categories">
+            Categories:
+                        <a href="/blog/categories/infraestrutura">infraestrutura</a>                        </p>
+                            <p class="tags">
+            Tags:
+                        <a href="/blog/tags/gitlab">gitlab</a>,                         <a href="/blog/tags/ci">ci</a>                        </p>
+        
+            </article>
+
+
+<div id="disqus_thread"></div>
+<script>
+    /* * * CONFIGURATION VARIABLES: EDIT BEFORE PASTING INTO YOUR WEBPAGE * * */
+    var disqus_shortname = 'vicentimartins'; // required: replace example with your forum shortname
+
+
+    
+    
+    
+    
+    /* * * DON'T EDIT BELOW THIS LINE * * */
+    (function () {
+        var dsq = document.createElement('script');
+        dsq.type = 'text/javascript';
+        dsq.async = true;
+        dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the
+    <a href="https://disqus.com/?ref_noscript" rel="nofollow">comments powered by Disqus.</a>
+</noscript>
+
+                </div>
+                <div class="col-sm-4 sidebar">
+                    <div class="card bg-light">
+                        <div class="card-header">Vicente Martins&#039; blog</div>
+                        <div class="card-body">
+                            <small>Tech stuffs and more</small>                        </div>
+                    </div>
+                    <div class="card bg-light sidebar-nav">
+                        <div class="card-header">Links</div>
+                        <div class="card-body">
+                            <ul class="nav flex-column">
+                                <li class="nav-item"><a class="nav-link" href="http://sculpin.io">sculpin.io</a></li>
+                                <li class="nav-item"><a class="nav-link" href="http://twitter.com/getsculpin">@getsculpin</a></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+        <footer class="container">
+            <span class="text-muted">&copy; 2019 Vicente Martins&#039; blog</span>
+        </footer>
+
+        <script src="/build/app.js"></script>
+                
+        
+                    </body>
+</html>
